@@ -1,0 +1,38 @@
+# TransMAR-GAN Testing Configuration
+
+model:
+  checkpoint: "./checkpoints/best_model_syndeeplesion.pth"
+  
+  generator:
+    type: NGswin
+    in_chans: 1
+    embed_dim: 64
+    depths: [6, 4, 4]
+    num_heads: [6, 4, 4]
+    window_size: 8
+
+testing:
+  batch_size: 1
+  save_images: true
+  compute_metrics: true
+  
+  metrics:
+    - psnr
+    - ssim
+    - mae
+    - rmse
+    - metal_region_mae
+  
+  visualization:
+    save_comparison: true
+    save_error_maps: true
+    save_difference_maps: true
+
+data:
+  test_path: "/path/to/test/data"
+  workers: 4
+
+output:
+  save_dir: "./test_results"
+  image_format: "png"
+  save_numpy: false

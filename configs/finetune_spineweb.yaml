@@ -1,0 +1,79 @@
+# TransMAR-GAN Fine-tuning Configuration - SpineWeb
+
+model:
+  # Same architecture as pre-training
+  generator:
+    type: NGswin
+    in_chans: 1
+    embed_dim: 64
+    depths: [6, 4, 4]
+    num_heads: [6, 4, 4]
+    window_size: 8
+    ngrams: [2, 2, 2, 2]
+  
+  discriminator:
+    type: MultiScalePatchGAN
+    in_channels: 2
+    base_channels: 64
+    num_layers: 5
+    num_scales: 3
+    use_spectral_norm: true
+
+training:
+  num_epochs: 25  # Fewer epochs for fine-tuning
+  batch_size: 4
+  patch_size: 128
+  num_workers: 4
+  
+  optimizer:
+    type: Adam
+    generator:
+      lr: 1.0e-5  # 10x lower than pre-training
+      betas: [0.5, 0.999]
+    discriminator:
+      lr: 2.0e-5
+      betas: [0.5, 0.999]
+  
+  loss_weights:
+    adversarial: 0.1
+    feature_matching: 10.0
+    reconstruction: 1.0
+    edge: 0.2
+    physics: 0.02
+    metal_consistency: 0.5
+  
+  metal_aware:
+    threshold: 0.6
+    dilation_radius: 5
+    beta_weight: 1.0
+    w_max: 3.0
+
+data:
+  dataset: SpineWeb
+  train_artifact_dir: "/home/Drive-D/UWSpine_adn/train/synthesized_metal_transfer/"
+  train_clean_dir: "/home/Drive-D/UWSpine_adn/train/no_metal/"
+  test_artifact_dir: "/home/Drive-D/UWSpine_adn/test/synthesized_metal_transfer/"
+  test_clean_dir: "/home/Drive-D/UWSpine_adn/test/no_metal/"
+  patch_size: 128
+  workers: 4
+  paired: true
+  hu_range: [-1000, 2000]
+
+pretrained:
+  load_checkpoint: "./checkpoints/best_model_syndeeplesion.pth"
+  load_generator: true
+  load_discriminator: true
+  load_optimizer: false  # Start with fresh optimizer states
+
+checkpointing:
+  save_dir: "./finetune_checkpoints"
+  save_every: 2
+  keep_last_n: 5
+  save_best: true
+
+logging:
+  tensorboard: true
+  log_every: 20
+  save_samples_every: 200
+
+random_seed: 999

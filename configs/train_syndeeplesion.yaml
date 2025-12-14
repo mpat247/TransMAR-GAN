@@ -1,0 +1,94 @@
+# TransMAR-GAN Training Configuration - SynDeepLesion
+
+model:
+  generator:
+    type: NGswin
+    in_chans: 1
+    embed_dim: 64
+    depths: [6, 4, 4]
+    num_heads: [6, 4, 4]
+    head_dim: null
+    dec_dim: 64
+    dec_depths: 6
+    dec_num_heads: 6
+    dec_head_dim: null
+    window_size: 8
+    mlp_ratio: 2.0
+    qkv_bias: true
+    drop_rate: 0.0
+    attn_drop_rate: 0.0
+    drop_path_rate: 0.0
+    ngrams: [2, 2, 2, 2]
+  
+  discriminator:
+    type: MultiScalePatchGAN
+    in_channels: 2
+    base_channels: 64
+    num_layers: 5
+    num_scales: 3
+    use_spectral_norm: true
+
+training:
+  num_epochs: 100
+  batch_size: 4
+  patch_size: 128
+  num_workers: 4
+  
+  optimizer:
+    type: Adam
+    generator:
+      lr: 1.0e-4
+      betas: [0.5, 0.999]
+    discriminator:
+      lr: 2.0e-4
+      betas: [0.5, 0.999]
+  
+  scheduler:
+    type: MultiStepLR
+    milestones: [50, 75]
+    gamma: 0.5
+  
+  loss_weights:
+    adversarial: 0.1
+    feature_matching: 10.0
+    reconstruction: 1.0
+    edge: 0.2
+    physics: 0.02
+    metal_consistency: 0.5
+  
+  metal_aware:
+    threshold: 0.6
+    dilation_radius: 5
+    beta_weight: 1.0
+    w_max: 3.0
+  
+  physics:
+    num_angles: 180
+    detector_spacing: 1.0
+
+data:
+  dataset: SynDeepLesion
+  train_path: "/home/Drive-D/SynDeepLesion/"
+  patch_size: 128
+  workers: 4
+  augmentation:
+    horizontal_flip: true
+    vertical_flip: true
+    rotation: false
+
+checkpointing:
+  save_dir: "./training_checkpoints"
+  save_every: 5
+  keep_last_n: 3
+  save_best: true
+  metric: "psnr"  # or "ssim", "mae"
+
+logging:
+  tensorboard: true
+  log_every: 50
+  save_samples_every: 500
+  num_samples: 4
+
+random_seed: 999
+deterministic: false
+cudnn_benchmark: true
